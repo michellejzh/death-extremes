@@ -131,7 +131,7 @@ def mergeZipcodeInfoWithWeather(zipcodefile, weatherDict, averageDict, yesterDic
 	with open(writePath, 'w') as fp:
 		writer = csv.writer(fp, delimiter=',')
 		weatherTitles = ["Precipitation", "Snow", "Tmax", "Tmin", "Awnd", "Avg Precipitation", "Avg Snow", "Avg Tmax", "Avg Tmin", "Avg Awnd", "Yester Precipitation", "Yester Snow", "Yester Tmax", "Yester Tmin", "Yester Awnd"]
-		writer.writerow(["Date", "income0", "income1", "income2", "income3", "income4", "income5"] + weatherTitles)
+		writer.writerow(["Date", "Emergencies", "income0", "income1", "income2", "income3", "income4", "income5"] + weatherTitles)
 		# writer.writerow(["Id", "Zipcode", "Average Income", "Date", "income0", "income1", "income2", "income3", "income4", "income5"] + weatherTitles)
 
 		zips = open(zipcodefile, "rU")
@@ -146,15 +146,22 @@ def mergeZipcodeInfoWithWeather(zipcodefile, weatherDict, averageDict, yesterDic
 			else:
 				observedDates.add(row["Date"])
 				try:
-					old = [row["Date"]]
-					incomes = [allDates[row['Date']][0], allDates[row['Date']][1], allDates[row['Date']][2], allDates[row['Date']][3], allDates[row['Date']][4], allDates[row['Date']][5]]
-					weather = weatherDict[row["Date"]] + averageDict[row["Date"]] + yesterDict[row["Date"]]
-					print old
-					print weather
-					writer.writerow(old + incomes + weather)
+					for i in xrange(6): # for each of 6 income brackets
+						old = [row["Date"]]
+						emergencies = allDates[row['Date']][i]
+						incomes = [emergencies]
+						for b in xrange(6):
+							if b==i:
+								incomes.append(1)
+							else:
+								incomes.append(0)
+						# incomes = [allDates[row['Date']][0], allDates[row['Date']][1], allDates[row['Date']][2], allDates[row['Date']][3], allDates[row['Date']][4], allDates[row['Date']][5]]
+						weather = weatherDict[row["Date"]] + averageDict[row["Date"]] + yesterDict[row["Date"]]
+						print old
+						print weather
+						writer.writerow(old + incomes + weather)
 				except KeyError, e:
 					print "KeyError: " + str(e)
-
 
 
 def savePolice(policefile):
@@ -250,5 +257,5 @@ def saveGasPrice():
 if __name__ == '__main__':
 	# saveZipcodes('Crime_Incident_Reports.csv', 'boston_income.csv')
 	weatherDict, averageDict, yesterDict = saveWeather('boston_climate_data.csv')
-	mergeZipcodeInfoWithWeather('zipcode-income1.csv', weatherDict, averageDict, yesterDict)
+	mergeZipcodeInfoWithWeather('zipcode-income_MERGE.csv', weatherDict, averageDict, yesterDict)
 

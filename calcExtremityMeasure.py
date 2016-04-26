@@ -1,0 +1,2 @@
+def calcExtremityMeasure(temperaturefile):
+	pass
