@@ -5,11 +5,6 @@ import sys
 import sets
 
 
-def createDataset(policefile, weatherfile, zipfile, gasfile):
-	# SAVE EVERYTHING INTO DICTIONARIES AND THEN ACCESS BY DATE
-	pass
-
-
 def saveWeather(weatherfile):
 	# open the weather data
 	weather = open(weatherfile, "rU")
@@ -23,14 +18,41 @@ def saveWeather(weatherfile):
 	qTmax = []
 	qTmin = []
 	qAwnd = []
+
+	Tmax80 = []
+	Tmin70 = []
+	Tmax80_2 = []
+	Tmin70_2 = []
+
 	count = 0
 	for row in weatherReader:
+		print count
 		count += 1
 		qPrcp.insert(0, float(row['PRCP']))
 		qSnow.insert(0, float(row['SNOW']))
 		qTmax.insert(0, float(row['TMAX']))
 		qTmin.insert(0, float(row['TMIN']))
 		qAwnd.insert(0, float(row['AWND']))
+
+		# to find the sum of temps above 70 in last week
+		aboveTmax = float(row['TMAX'])-80.0
+		aboveTmin = float(row['TMIN'])-70.0
+		if aboveTmax <= 0:
+			aboveTmax = 0.0
+		if aboveTmin <= 0:
+			aboveTmin = 0.0
+		Tmax80.insert(0, aboveTmax)
+		Tmin70.insert(0, aboveTmin)
+
+		# to find the sum of temps above 70 in last week (squared)
+		aboveTmax2 = (float(row['TMAX'])-80.0)**2
+		aboveTmin2 = (float(row['TMIN'])-70.0)**2
+		if aboveTmax2 <= 0:
+			aboveTmax2 = 0.0
+		if aboveTmin2 <= 0:
+			aboveTmin2 = 0.0
+		Tmax80_2.insert(0, aboveTmax2)
+		Tmin70_2.insert(0, aboveTmin2)
 
 		if count < 7:
 			yPrcp = row['PRCP']
@@ -45,14 +67,20 @@ def saveWeather(weatherfile):
 			qTmax.pop()
 			qTmin.pop()
 			qAwnd.pop()
+			Tmin70.pop()
+			Tmax80.pop()
 
 			avgPrcp = 0
 			avgSnow = 0
 			avgTmax = 0
 			avgTmin = 0
 			avgAwnd = 0
+			sumTmax80 = 0
+			sumTmin70 = 0
+			sumTmax80_2 = 0
+			sumTmin70_2 = 0
 
-			# calculate the moving average of each of these values for the last week
+			# calculate the moving average of each of these values for the last week  -----------------------------
 			for x in list(qPrcp):
 				avgPrcp += x
 			avgPrcp = float(avgPrcp)/7.0
@@ -73,9 +101,21 @@ def saveWeather(weatherfile):
 				avgAwnd += x
 			avgAwnd = float(avgAwnd)/7.0
 
+			# calculate the values above 70 for the last week ------------------------------------------------------
+			for x in list(Tmax80):
+				sumTmax80 += x
+			for x in list(Tmin70):
+				sumTmin70 += x
+
+			# now squared
+			for x in list(Tmax80_2):
+				sumTmax80_2 += x
+			for x in list(Tmin70):
+				sumTmin70_2 += x
+
 			# PRCP, SNOW, TMAX, TMIN, AWND
 			weatherDict[row['DATE']] = [row['PRCP'], row['SNOW'], row['TMAX'], row['TMIN'], row['AWND']]
-			averageDict[row['DATE']] = [avgPrcp, avgSnow, avgTmax, avgTmin, avgAwnd]
+			averageDict[row['DATE']] = [avgPrcp, avgSnow, avgTmax, avgTmin, avgAwnd, sumTmax80, sumTmin70, sumTmax80_2, sumTmin70_2]
 			yesterDict[row['DATE']] = [yPrcp, ySnow, yTmax, yTmin, yAwnd]
 
 			# save as yesterday
@@ -85,15 +125,9 @@ def saveWeather(weatherfile):
 			yTmin = row['TMIN']
 			yAwnd = row['AWND']
 
-
-	# print "========================================="
-	# print yesterDict
-	# print "========================================="
-	# sys.exit()
 	return weatherDict, averageDict, yesterDict
 
 def checkIncomeBracket(income):
-	# TODO: check which
 	income = float(income) 
 	if income<=29044:
 		return 0
@@ -135,21 +169,26 @@ def mergeZipcodeInfoWithWeather(zipcodefile, weatherDict, averageDict, yesterDic
 	zipsReader  = csv.DictReader(zips)
 	zip_income = {}
 	for row in zipsReader:
-		bracket = checkIncomeBracket(row['Average Income'])
-		if row['Date'] in allDates:
-			allDates[row['Date']][bracket] += 1
+		nature = row["NatureCode"]
+		if nature != "CARDIA" and nature != "CARST" and nature != "UNCONS" and nature != "IVPER" and nature != "UNK":
+			print "Not correct nature"
+			pass
 		else:
-			allDates[row['Date']] = {}
-			for i in xrange(6):
-				allDates[row['Date']][i] = 0
-			allDates[row['Date']][bracket] = 1
+			bracket = checkIncomeBracket(row['Average Income'])
+			if row['Date'] in allDates:
+				allDates[row['Date']][bracket] += 1
+			else:
+				allDates[row['Date']] = {}
+				for i in xrange(6):
+					allDates[row['Date']][i] = 0
+				allDates[row['Date']][bracket] = 1
 
 	population = loadPopulations('zips_population.csv')
-	writePath = "full_dataset.csv"
+	writePath = "full_dataset_BYCODE_WWAVES.csv"
 	lows, highs = loadHistAverages()
 	with open(writePath, 'w') as fp:
 		writer = csv.writer(fp, delimiter=',')
-		weatherTitles = ["Precipitation", "Snow", "Tmax", "Tmin", "Awnd", "Avg Precipitation", "Avg Snow", "Avg Tmax", "Avg Tmin", "Avg Awnd", "Yester Precipitation", "Yester Snow", "Yester Tmax", "Yester Tmin", "Yester Awnd", "Avg Low", "Avg High"]
+		weatherTitles = ["Precipitation", "Snow", "Tmax", "Tmin", "Awnd", "Avg Precipitation", "Avg Snow", "Avg Tmax", "Avg Tmin", "Avg Awnd", "sumTmax80", "sumTmin70", "sumTmax80_2", "sumTmin70_2", "Yester Precipitation", "Yester Snow", "Yester Tmax", "Yester Tmin", "Yester Awnd", "Avg Low", "Avg High"]
 		writer.writerow(["Date", "Emergencies", "Per Cap Emergencies", "income0", "income1", "income2", "income3", "income4", "income5"] + weatherTitles)
 		# writer.writerow(["Id", "Zipcode", "Average Income", "Date", "income0", "income1", "income2", "income3", "income4", "income5"] + weatherTitles)
 

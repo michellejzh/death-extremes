@@ -46,7 +46,7 @@ def saveZipcodes(policefile, incomesfile):
 				date = year + month + day
 				print "DATE: " + str(date)
 				# see file 1
-				if date < "20130426":
+				if date < "20150602":
 					print "in earlier file..."
 					pass
 				else:

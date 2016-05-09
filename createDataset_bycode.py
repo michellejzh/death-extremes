@@ -135,17 +135,22 @@ def mergeZipcodeInfoWithWeather(zipcodefile, weatherDict, averageDict, yesterDic
 	zipsReader  = csv.DictReader(zips)
 	zip_income = {}
 	for row in zipsReader:
-		bracket = checkIncomeBracket(row['Average Income'])
-		if row['Date'] in allDates:
-			allDates[row['Date']][bracket] += 1
+		nature = row["NatureCode"]
+		if nature != "CARDIA" and nature != "CARST" and nature != "UNCONS" and nature != "IVPER" and nature != "UNK":
+			print "Not correct nature"
+			pass
 		else:
-			allDates[row['Date']] = {}
-			for i in xrange(6):
-				allDates[row['Date']][i] = 0
-			allDates[row['Date']][bracket] = 1
+			bracket = checkIncomeBracket(row['Average Income'])
+			if row['Date'] in allDates:
+				allDates[row['Date']][bracket] += 1
+			else:
+				allDates[row['Date']] = {}
+				for i in xrange(6):
+					allDates[row['Date']][i] = 0
+				allDates[row['Date']][bracket] = 1
 
 	population = loadPopulations('zips_population.csv')
-	writePath = "full_dataset.csv"
+	writePath = "full_dataset_BYCODE.csv"
 	lows, highs = loadHistAverages()
 	with open(writePath, 'w') as fp:
 		writer = csv.writer(fp, delimiter=',')
