@@ -1,0 +1,152 @@
+
+\documentclass[11pt, oneside]{article}      % use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                       % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                          % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                       % Activate for rotated page geometry
+%\usepackage[parfill]{parskip}          % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}               % Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+                                % TeX will automatically convert eps --> pdf in pdflatex        
+\usepackage{amssymb}
+\usepackage[capposition=top]{floatrow}
+\usepackage{subcaption}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+
+% To compile bibliography, in Terminal
+% $ latex filename
+% $ biber filename
+% $ latex filename
+
+% Additional Packages
+% Bibliography Package:
+\usepackage[% comment spaces as biblatex sometimes dislikes them a lot
+        natbib=true,% just this for natbib compatibility - don't load natbib itself
+        bibstyle=authoryear,%
+        citestyle=authoryear-comp,%
+        %hyperref=true,%
+        citetracker=true,
+        backend=biber,%
+        maxbibnames=1,%
+        firstinits=true,%
+        uniquename=init,%
+        maxcitenames=2,%
+        maxbibnames=10,
+        parentracker=true,%
+        url=false,%
+        doi=false,%
+        isbn=false,%
+        eprint=false,%
+       % backref=true,%
+            ]  {biblatex}\addbibresource{mz_bib.bib}
+\AtEveryCitekey{\ifciteseen{}{\defcounter{maxnames}{99}}}
+
+\usepackage{amsmath}
+\linespread{1.6}
+\usepackage{comment}
+
+\begin{document}
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        
+        \Huge
+        \textbf{Death by Extremes:}
+        
+        \vspace{0.5cm}
+        \large
+        The differential impact of extreme heat on medical emergencies by income group \\
+        
+        
+        
+        \vfill
+        
+        \large
+        Michelle Zheng \\
+        ECON 1660\\
+        Professor Bjorkegren\\
+        May 10, 2016\\
+        \vspace{0.8cm}
+        
+    \end{center}
+\end{titlepage}
+
+
+\section{Introduction}
+The deadliness of heat waves is highly disproportionate to the amount of media attention dedicated to its effects. While more visible and dramatic events such as earthquakes and hurricanes are more easily recognized as natural disasters, heat waves are the most disastrous of all, with an average of 1,500 urban American fatalities per year, as compared to an average annual death toll of fewer than 200 for tornadoes, earthquakes, and floods. [1] In particular, society's most marginalized groups - the elderly, alone, sick, and impoverished - are most likely to be affected. [2]
+
+Given the disproportionate and deadly impacts of heat waves, I ask the following: how does extreme heat impact the frequency of emergency medical calls made in a population, and how does the magnitude of this effect vary for different income level within the population? I attempt to answer this by regressing the number of 911 calls for medical assistance per day in Boston on various measures of the ``extremeness" of the daily temperature, interacting these extremity measure with dummy variables for different levels of income as determined by some measure of income in the police district within which a 911 call occurred in order to look at differential effects by income.
+
+
+\section{Literature}
+Physiologically, heat is known to cause a number of health issues. Most directly, it can lead to heat exhaustion and heat stroke; indirectly, it can exacerbate existing medical conditions, especially cardiovascular ones, and lead to long-term organ damage in the case of extreme exposure [8]. One symptom of both heat exhaustion and heat stroke is fainting, which I specifically look at as a heat-related medical emergency later on. These physiological properties of heat's effect on mortality rates are the starting point of structural models estimating this relationship; Diaz et. al (2004) suggest that the daily maximum temperature is the best thermal indicator of climate on mortality, with a maximum impact at 7-8 days after extreme heat events as evidenced by their analysis of data from Madrid. However, Anderson and Bell (2009) show a shorter lag of between 0-2 days for data in 107 US urban communities. There also appears to be different thresholds at which populations react to high temperatures, depending on what is considered ``normally" hot in the climate (McGeehin and Mirabelli, 2001), suggesting that a good measure of heat ``extremity" may be taken as exceeding some percentile of a year's ordered daily temperatures.
+
+Semenza et. al (1996) look to data on the Chicago heat wave of 1995 and show that living in an apartment, poorer health, and not owning air conditioning are factors leading to additional risk for heat death, all of which are also correlated with lower income. Klinenberg (2003) investigates this from a sociological standpoint but reflects the same conclusions: many deaths were due to physical and social isolation, the institutional abandonment of poor neighborhoods, and lack of public assistance in counteracting the known deadly effects of heat waves.
+
+Knowlton et. al (2009) look at morbidity (rather than mortality as most other studies do), using hospitalization data to determine how how the frequency of different illnesses change during heat waves. They saw significant increases in hospitalizations for acute renal failure, cardiovascular diseases, diabetes, electrolyte imbalance, and nephritis even for relatively modest temperature increases, suggesting that effects on health occur even during "non-event" heat increases.
+
+
+\section{Data}
+I use Boston as my case study in investigating the effects of heat on medical emergencies, looking at various Boston datasets on the daily timescale. The bulk of the data comes from crime incident reports from the Boston Police Department, which labels which calls are for medical emergencies, with additional detail about the type of emergency and where and when the call was made [3]. To measure heat, I use National Oceanic and Atmospheric Administration (NOAA) data on daily weather conditions at Logan Airport from 2012-2016. It includes characteristics such as maximum and minimum daily temperature, precipitation, snowfall, and average wind [4]. Historical data on daily average temperature comes from national local weather provider The Weather Company's online site, Intellicast [7].
+
+In order to associate calls with with income brackets, I use data on income by zip code for the year 2005 [5]. Reverse geocoding the longitudes and latitudes associated with each crime incident via the Python ``geocoder" package, I then match the resulting zip code from each location to its average resident's income in 2005. Each daily observation is then split into 6 observations for the 6 income dummies representing the following septiles: less than \$29,044, to \$47,086, to \$34,374, to \$63,549, to \$35,637, and more than \$63,549.
+
+I then adjust the number of emergency calls made in each income bracket to its per capita equivalent in order to make the coefficients of each of the upcoming regression's terms more intuitive and comparable to each other (in addition to including income dummies, which accounts for baseline differences in the number of calls made per income bracket region). This is done by summing the 2013 estimated populations of each zip code area [6] that is taken into account in a given income bracket region, and dividing the number of emergency calls made in these regions by the population sum. This resolves bias on the relative sizes of the coefficients introduced by variation in the populations corresponding to each income bracket.
+
+A major assumption that I make in translating these zip codes into income brackets is that a person's income level is associated with the income level of the zip code in which they make an emergency medical call. This is a strong assumption, given that people will spend large amounts of time away from home (eg. for work during the day, out shopping). To reduce bias from the fact that people aren't always making emergency calls from their homes, I removed zip codes with a residential population of less than 1,000  in 2001 (via tax return address information), which I believed would be similar to the populations in each zip code throughout the 2012-2015 time period I looked at. Double checking each removed zip code with low population to get an informal sense of how residential each area was, I looked at current map views of each area. This seemed to confirm that these areas were largely non-residential, encompassing locations like Harvard Business School and South Station (see [appendix 1]). Future research should attempt to account for remaining bias from the fact that one's call location is not necessarily one's residential location.
+
+Another assumption I make is in choosing the "nature codes" associated with each emergency medical call that I believe are most likely related to the effects of heat. There are 197 nature codes associated with the dataset, though many appear to be redundant (variations on the same code, such as ``SHOT", ``SHOTS", and `` SHOTS"). I was unable to find a key to the meanings of each of these codes or receive a full response from the Boston Police Department, but confirmed with the department the meanings of a few key codes that were most relevant to heat-related morbidity. These codes were ``CARDIA", ``CARST" (both of which are assumed to be related to cardiac problems), ``UNCONS" (unconsciousness), ``IVPER" ("investigate person", a category covering a large fraction of all coded incidents that likely contains relevant cases), and ``UNK" (unknown, similar to ``IVPER"). A complete list of nature codes associated with calls for medical assistance can be found in the [appendix].
+
+
+\section{Methodology}
+I estimate the effect of extreme heat on the frequency of emergency medical calls by regressing the number of hospital calls on a measure of temperature extremity, as interacted with different income dummies. The hospital calls are adjusted to be per capita as associated with the populations of the different zip codes that are associated with each income group; for example, if zip code 1 and 2 each have a population of 1,000 and make up income group 0, then the absolute number of calls made for income group 0 is divided by 2,000 to reach the per capita value.
+
+Finding a measure of temperature extremity reflecting the true physiological effects of heat on health was the key problem in constructing the regression. The use of the simple measures of temperature seem to have no effect on the number of per capita emergencies. Daily maximum temperature, daily minimum temperature, and weekly average temperature seemed to have no statistically significant effects on the number of medical emergency calls made, nor clear variation in effect as interacted with different income levels.
+
+The same went for linear and quadratic measures of extremity relying on simple differences. The difference between 50 F and the daily maximum temperature (0 if below 50 F), squared difference between 50 F and the daily maximum temperature (0 if below 50 F), squared absolute value of the difference between 70 F and the daily maximum temperature (0 if below 70 F), and squared absolute value of the difference between 80 F and the daily maximum temperature (0 if below 80 F) showed no significant effects either.
+
+Simple comparisons to historical daily averages and averages of the past week were just as insignificant. The difference between temperature and historical average for days with maximum daily temperature over 70 F, difference between temperature and historical average for days with maximum daily temperature over 80 F, and difference between maximum daily temperature and the average of the last 7 daily maximum temperatures showed no statistically significant results, either.
+
+Drawing from the literature and taking the ineffectiveness of the measures above into account, it seemed necessary to find a measure that focused on the event-like nature of an extreme heat event, where the duration of a heat event as well as its intensity was considered. Initially, I tried using the sum over the last 7 days of the difference between daily maximum temperature and 80 F (0 if below 80F) and the sum over the last 7 days of the difference between daily minimum temperature and 70 F if positive (0 if below 70F). Seeing that these did not display clear effects either, I then squared the difference between the 70 and 80 F thresholds on each day. This revealed highly significant effects at the 99\% level for many interactions.
+
+I focus on the regression the use of the 80 F daily maximum temperature threshold, which I run both on just the heat-related nature code observations as well as for the full dataset. For only heat-related observations, the regression suggests a significant relationship between lower income and increased effect of heat on emergency calls, displaying highly significant coefficients for each income bracket except for bracket 1 and 3 (\$29,044 to \$47,086 and \$34,374, to \$63,549), with an R-squared value of 0.114. Over the full dataset, the regression suggests a similar general trend, though with an R-squared value of 0.1230, suggesting that heat may have additional explanatory power in determining calls for nature codes that were discarded in the first regression. A likely explanation may be the increase in violent crime that has been shown to occur during higher temperature days (Burke, Hsiang, and Miguel 2013); these crimes lead to injury-related medical calls that would increase my R-squared value and bias my coefficients downward, since I am only interested in changes in medical emergencies due to the direct effects of heat, not the indirect effect of increases in violent crime. _____________________
+
+%maybe these are due to bias from people not being associated with average incomes in these places?
+
+
+
+[reg]
+Square of sum over the last 7 days of the difference between daily maximum temperature and 80 F if positive; 0 otherwise. ONLY HEAT RELEVANT CODES
+
+[reg]
+Square of sum over the last 7 days of the difference between daily maximum temperature and 80 F if positive; 0 otherwise. FULL DATASET
+
+[reg: same but with all emergency calls max 80]
+[reg: same but with all emergency calls min 70]
+
+\section{Results}
+teehee
+
+
+\section{Conclusion}
+
+
+% CITATIONS
+% [1] http://www.nytimes.com/2002/08/13/health/most-deadly-of-the-natural-disasters-the-heat-wave.html?pagewanted=all
+% [2] "Heat Wave: A Social Autopsy of Disaster in Chicago" by Eric Klinenberg
+% [3] https://data.cityofboston.gov/Public-Safety/Crime-Incident-Reports/7cdf-6fgx
+% [4] National Oceanic and Atmospheric Administration (NOAA) data on weather at Logan Airport, from 2012-2016. Includes weather characteristics such as maximum and minimum daily temperature, precipitation, snowfall, and average wind.
+% [5] http://archive.boston.com/bostonglobe/regional_editions/specials/average_income_by_zipcode/
+% [6] http://www.city-data.com/zipmaps/Boston-Massachusetts.html
+% [7] http://www.intellicast.com/Local/History.aspx?location=USMA0046 
+% [8] http://www.crh.noaa.gov/images/pah/pdf/heatsafety.pdf 
+% [9] http://www.nytimes.com/2013/09/01/opinion/sunday/weather-and-violence.html?_r=0
+% [10] 
+
+
+\section{Appendix}
+
+
+
+\pagebreak
+\end{document}
+\end{document}
